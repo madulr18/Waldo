@@ -10,9 +10,10 @@ public class ImageRun {
         ImageProcessor.grayscale(grayscale);
         ImageProcessor.partitionPixels(grayscale, 4);
         ImageProcessor.redscale(redscale);
-
+        //
+        ImageProcessor.findWaldo(original, grayscale);
         //Waldo is found between here
-        String filename = ImageRestore.restore(grayscale, "C:/Users/cod21/IdeaProjects/Waldo/RestoredWaldo/newWaldo1.png");
+        String filename = ImageRestore.restore(original, "C:/Users/cod21/IdeaProjects/Waldo/RestoredWaldo/newWaldo1.png");
         EventQueue.invokeLater(() -> {
             ImageRunner ex = new ImageRunner(filename);
             ex.setVisible(true);

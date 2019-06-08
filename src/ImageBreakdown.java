@@ -61,6 +61,6 @@ public class ImageBreakdown {
     }
 
     public boolean isInBounds(int row, int col){
-        return row < height && col < width;
+        return row < height && col < width && row >= 0 && col >=0;
     }
 }

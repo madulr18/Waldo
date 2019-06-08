@@ -1,20 +1,32 @@
 import java.awt.*;
 
 public class ImageProcessor {
-    public static void findWaldo(ImageBreakdown image){
+    static PixelMarker markedGrid;
+    static PixelMarker hairSpots;
+
+    public static void findWaldo(ImageBreakdown image, ImageBreakdown grayscale){
+        markedGrid = new PixelMarker(image.getHeight(), image.getWidth());
+        hairSpots = new PixelMarker(image.getHeight(), image.getWidth());
         /*
         for(int row = 0; row < image.getHeight(); row++){
             for (int col = 0; col < image.getWidth(); col++) {
-                Color pixel = image.getPixel(row,col);
-                int b = pixel.getBlue();
-                int r = pixel.getRed();
-                int g = pixel.getGreen();
-                Color newPixel = new Color(r, g, b);
-                image.setPixel(row, col, newPixel);
+
+                drawSquare(image, row, col, Color.BLUE, 4);
             }
         }
         */
-        drawSquare(image,300,300, Color.BLUE, 4);
+
+        triangleSearch(image, grayscale);
+
+        /*
+        for (int i =  0; i < 100; i++){
+            int row = (int)(Math.random()*image.getHeight());
+            int col = (int)(Math.random()*image.getWidth());
+            drawSquare(image,row,col,Color.BLUE,4);
+        }
+        */
+
+
     }
 
     public static void grayscale(ImageBreakdown image){
@@ -72,23 +84,35 @@ public class ImageProcessor {
     }
 
     private static void drawSquare(ImageBreakdown image, int row, int col, Color color, int thickness){
-        for(int i = 0; i < thickness; i++){
-            drawSingleSquare(image, row, col, color, i);
-        }
-
-    }
-    private static void drawSingleSquare(ImageBreakdown image, int row, int col, Color color, int iteration){
-        int squareRadius = ((image.getHeight() + image.getWidth())/(2*30))-iteration;
+        int squareRadius = ((image.getHeight() + image.getWidth())/(2*30));
         int rowTop = row - squareRadius;
         int rowBottom = row + squareRadius;
         int colLeft = col - squareRadius;
         int colRight = col + squareRadius;
+        if (!OverlappingSquare(rowTop,rowBottom,colLeft,colRight)) {
+            markedGrid.markArea(row, col, squareRadius);
+            for (int i = 0; i < thickness; i++) {
+                drawSingleSquare(image, rowTop + i, rowBottom - i, colLeft + i, colRight - i, color);
+            }
+        }
+
+    }
+    private static void drawSingleSquare(ImageBreakdown image, int rowTop, int rowBottom, int colLeft, int colRight, Color color){
 
         drawVerticalLine(image, rowTop, rowBottom, colLeft, color);
         drawVerticalLine(image, rowTop, rowBottom, colRight, color);
 
         drawHorizontalLine(image, colLeft, colRight, rowTop, color);
         drawHorizontalLine(image, colLeft, colRight, rowBottom, color);
+    }
+
+
+    //Needs to behave only when the square overlaps the center pixel
+    private static boolean OverlappingSquare(int rowTop, int rowBottom, int colLeft, int colRight){
+        return markedGrid.isMarked(rowTop, colLeft) ||
+                markedGrid.isMarked(rowTop, colRight) ||
+                markedGrid.isMarked(rowBottom, colLeft) ||
+                markedGrid.isMarked(rowBottom, colRight);
     }
 
     private static void drawVerticalLine(ImageBreakdown image, int top, int bottom, int col, Color color){
@@ -105,5 +129,41 @@ public class ImageProcessor {
                 image.setPixel(row, i, color);
             }
         }
+    }
+
+    private static void triangleSearch(ImageBreakdown image, ImageBreakdown grayscale){
+        for(int row = 0; row < grayscale.getHeight(); row++){
+            for (int col = 0; col < grayscale.getWidth(); col++) {
+                if(singleTriangleTest(grayscale, row, col)){
+                    hairSpots.mark(row, col);
+                    drawSquare(image, row, col, Color.BLUE, 4);
+                }
+            }
+        }
+    }
+
+    private static boolean singleTriangleTest(ImageBreakdown grayscale, int row, int col){
+        for(int i = 0; i<7; i++){
+            if(grayscale.isInBounds(row+2, col+i)){
+                if(!grayscale.getPixel(row+2, col+i).equals(Color.BLACK)){
+                    return false;
+                }
+            }
+        }
+        for(int i = 2; i<7; i++){
+            if(grayscale.isInBounds(row+1, col+i)){
+                if(!grayscale.getPixel(row+1, col+i).equals(Color.BLACK)){
+                    return false;
+                }
+            }
+        }
+        for(int i = 4; i<7; i++){
+            if(grayscale.isInBounds(row, col+i)){
+                if(!grayscale.getPixel(row, col+i).equals(Color.BLACK)){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
